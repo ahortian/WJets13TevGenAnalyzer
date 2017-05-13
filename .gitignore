@@ -1,0 +1,6 @@
+*.so
+*.d
+*.root
+*.pyc
+*.log
+crab_*
