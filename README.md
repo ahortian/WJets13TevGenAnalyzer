@@ -28,6 +28,8 @@ voms-proxy-init -voms cms // to acsess file in das
 
 mkdir WJets13TeV
 
+cd WJets13TeV
+
 git clone https://github.com/ahortian/WJets13TevGenAnalyzer.git
 
 --------------------------------------------------------------------------------
