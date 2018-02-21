@@ -18,6 +18,7 @@ cmsenv
 
 voms-proxy-init -voms cms // to acsess file in das
 
+--------------------------------------------------------------------------------
 
 -- Clone /WJets13TevGenAnalyzer from the github
 
@@ -29,19 +30,19 @@ mkdir WJets13TeV
 
 git clone https://github.com/ahortian/WJets13TevGenAnalyzer.git
 
-
+--------------------------------------------------------------------------------
 -- Go to the directory
 
 cd WJets13TevGenAnalyzer
 
-
+--------------------------------------------------------------------------------
 -- Run
 
 scram b
 
-cmsRun wjets13tevanalyzer_cfg.pyi
+cmsRun wjets13tevanalyzer_cfg.py
 
-
+--------------------------------------------------------------------------------
 -- for submitting crab jobs
 
 source /cvmfs/cms.cern.ch/crab3/crab.sh
