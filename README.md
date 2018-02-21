@@ -1,3 +1,4 @@
+
 # Instructions
 --- set up working directory
 mkdir WJets13TeVGeN
@@ -25,3 +26,4 @@ cmsRun wjets13tevanalyzer_cfg.pyi
 -- for submitting crab jobs
 source /cvmfs/cms.cern.ch/crab3/crab.sh
 crab submit --config=crabConfig_WJetsAMCNLO.py
+
