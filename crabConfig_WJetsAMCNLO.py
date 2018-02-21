@@ -12,9 +12,13 @@ config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'wjets13tevanalyzer_cfg.py'
 
 
+# 8 TeV sample
 #config.Data.inputDataset = '/WJetsToLNu_TuneCUETP8M1_8TeV-amcatnloFXFX-pythia8/Summer12DR53X-PU_S10_TuneCUETP8M1_START53_V19-v3/AODSIM'
-config.Data.inputDataset = '/WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext2-v1/MINIAODSIM'
 
+# large sample
+#config.Data.inputDataset = '/WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext2-v1/MINIAODSIM'
+# small sample
+config.Data.inputDataset = '/WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM'
 
 
 

@@ -91,6 +91,7 @@ class WJets13TevAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources
 	TH1D* _hist_excl_WJetMult_vetomujetcut;
 	TH1D* _hist_NMuon;
 	TH1D* _hist_NNeutrino;
+	TH1D* _hist_NPhoton;
 	TH1D* _hist_MuonPt_0j;
 	TH1D* _hist_MuonEta_0j;
 	TH1D* _hist_MT_0j;
@@ -118,6 +119,7 @@ class WJets13TevAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources
 	vector<float> genPhoPhi_;
 	vector<float> genPhoE_;
 	vector<int> genPhoSt_;
+	vector<bool> genPhoPrompt_;
 	vector<int> genPhoMotherId_;
 	
 	vector<float> genJetPt_;
@@ -205,6 +207,7 @@ WJets13TevAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	genPhoPhi_.clear();
 	genPhoE_.clear();
 	genPhoSt_.clear();
+	genPhoPrompt_.clear();
 	genPhoMotherId_.clear();
 	
 	
@@ -242,6 +245,7 @@ WJets13TevAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	
 	int GMuCnt(0);
 	int GMNuCnt(0);
+	int GPhoCnt(0);
 	
 	double id1(0);
 	double id2(0);
@@ -286,11 +290,11 @@ WJets13TevAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 		}
 		std::string whichWeightId = std::to_string(pdfset);
 		
-		double weight = 1.;
+		double weight = theWeight;
 		for (unsigned int i=0; i<LHEEvtProd->weights().size(); i++) {
 			if (LHEEvtProd->weights()[i].id == whichWeightId){
-				weight *= LHEEvtProd->weights()[i].wgt;
-				if (DEBUG) std::cout << " i " << i << " id " << whichWeightId << " wgt " << LHEEvtProd->weights()[i].wgt << " new weight " << weight << std::endl;
+				weight *= LHEEvtProd->weights()[i].wgt/LHEEvtProd->originalXWGTUP();
+				//if (DEBUG) std::cout << " i " << i << " id " << whichWeightId << " wgt " << LHEEvtProd->weights()[i].wgt << " new weight " << weight << std::endl;
 				break;
 			}
 			//if (DEBUG) std::cout << __LINE__ << " " << theWeight << " " << evtWeights.back() << std::endl;
@@ -313,6 +317,9 @@ WJets13TevAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 		//if (id == -22) cout << " gen id " << id << endl;
 		//if (st == -1 ) cout << " gen st " << st << endl;
 		
+		bool isPrompt = p->isPromptFinalState();
+		bool isDirectTauDecay = p->isDirectPromptTauDecayProductFinalState();
+		
 		//----- lepton
 		if (st==1 && (fabs(id)==11 || fabs(id)==13 || fabs(id)==15
 					  || fabs(id)==12|| fabs(id)==14|| fabs(id)==16)){
@@ -325,8 +332,6 @@ WJets13TevAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 				if(fabs(tau_mother->pdgId()) == 15) isFromTau = true;
 			}
 			
-			bool isPrompt = p->isPromptFinalState();
-			
 			TLorentzVector genLep1(0,0,0,0);
 			genLep1.SetPtEtaPhiE(p->pt(),p->eta(),p->phi(),p->energy());
 			double charge(0);
@@ -335,7 +340,7 @@ WJets13TevAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 			else if (id > 0) charge = -1;
 			else if (id < 0) charge = 1;
 			
-			if (DEBUG) cout << " id " << id << " " << fabs(id) << " pt " << genLep1.Pt() << " eta " << genLep1.Eta() << " isFromTau " << isFromTau << " " << isPrompt << endl;
+			if (DEBUG) cout << " Lep id " << id << " " << fabs(id) << " pt " << genLep1.Pt() << " eta " << genLep1.Eta() << " isPromptFinalState " << isPrompt << " isFromTau " << isFromTau << " isDirectPromptTauDecayProductFinalState " << isDirectTauDecay << endl;
 			
 			//---- dressed lepton
 			TLorentzVector genR1DressLep1(0,0,0,0);
@@ -375,14 +380,21 @@ WJets13TevAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 		
 		//----- photon
 		if (st==1 && fabs(id) == 22){
+			
 			TLorentzVector genPho(0, 0, 0, 0);
 			genPho.SetPtEtaPhiE(p->pt(),p->eta(),p->phi(),p->energy());
+			
+			if (DEBUG) cout << " Pho id " << id << " " << fabs(id) << " pt " << genPho.Pt() << " eta " << genPho.Eta() << " isPromptFinalState " << isPrompt << " isFromTau " << "NAN" << " isDirectPromptTauDecayProductFinalState " << isDirectTauDecay << endl;
+			
+			// count PromptFinalState photon ET > 10GeV
+			if (genPho.Et() > 10 && isPrompt) GPhoCnt++;
 			
 			genPhoPt_.push_back(genPho.Pt());
 			genPhoEta_.push_back(genPho.Eta());
 			genPhoPhi_.push_back(genPho.Phi());
 			genPhoE_.push_back(genPho.Energy());
 			genPhoSt_.push_back(st);
+			genPhoPrompt_.push_back(isPrompt);
 			genPhoMotherId_.push_back(motherId);
 			
 		}
@@ -390,6 +402,7 @@ WJets13TevAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	} // end loop over GenParticles
 	
 	if (DEBUG) cout << "  GMuCnt : " << GMuCnt << " GMNuCnt " << GMNuCnt << endl;
+	if (DEBUG) cout << "  GPhoCnt : " << GPhoCnt << endl;
 	
 	
 	//--- GenJets ---
@@ -420,6 +433,7 @@ WJets13TevAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	_hist_excl_WJetMult_jetcut->Fill(ngenjet, theWeight);
 	_hist_NMuon->Fill(GMuCnt, theWeight);
 	_hist_NNeutrino->Fill(GMNuCnt, theWeight);
+	_hist_NPhoton->Fill(GPhoCnt, theWeight);
 	//    _hist_MuonPt_0j->Fill(muDressed.Pt(), theWeight);
 	//    _hist_MuonEta_0j->Fill(muDressed.Pt(), theWeight);
 	//    _hist_MT_0j->Fill(WmT, theWeight);
@@ -451,10 +465,10 @@ WJets13TevAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 		}
 		std::string whichWeightId = std::to_string(pdfset);
 		
-		double weight = 1.;
+		double weight = theWeight;
 		for (unsigned int i=0; i<LHEEvtProd->weights().size(); i++) {
 			if (LHEEvtProd->weights()[i].id == whichWeightId){
-				weight *= LHEEvtProd->weights()[i].wgt;
+				weight *= LHEEvtProd->weights()[i].wgt/LHEEvtProd->originalXWGTUP();
 				//if (DEBUG) std::cout << " i " << i << " id " << whichWeightId << " wgt " << LHEEvtProd->weights()[i].wgt << " new weight " << weight << std::endl;
 				break;
 			}
@@ -494,8 +508,9 @@ WJets13TevAnalyzer::beginJob()
 	_hist_excl_WJetMult_jetcut = fs->make<TH1D>("njetWJet_excl_jetcut", "njetWJet_excl_jetcut", 8, -0.5, 7.5);
 	_hist_excl_WJetMult_vetomu = fs->make<TH1D>("njetWJet_excl_vetomu", "njetWJet_excl_vetomu", 8, -0.5, 7.5);
 	_hist_excl_WJetMult_vetomujetcut = fs->make<TH1D>("njetWJet_excl_vetomujetcut", "njetWJet_excl_vetomujetcut", 8, -0.5, 7.5);
-	_hist_NMuon = fs->make<TH1D>("NMuon", "NMuon", 8, -0.5, 7.5);
+	_hist_NMuon     = fs->make<TH1D>("NMuon", "NMuon", 8, -0.5, 7.5);
 	_hist_NNeutrino = fs->make<TH1D>("NNeutrino", "NNeutrino", 8, -0.5, 7.5);
+	_hist_NPhoton   = fs->make<TH1D>("NPhoton", "NPhoton", 8, -0.5, 7.5);
 	_hist_MuonPt_0j     = fs->make<TH1D>("muPt_inc0jet", "muPt_inc0jet", 40, 0, 200);
 	_hist_MuonEta_0j    = fs->make<TH1D>("muEta_inc0jet", "muEta_inc0jet", 24,-2.4, 2.4);
 	_hist_MT_0j         = fs->make<TH1D>("MT_inc0jet", "MT_inc0jet", 200,0.,400);
@@ -523,6 +538,7 @@ WJets13TevAnalyzer::beginJob()
 	outputTree->Branch("GPhotPhi", &genPhoPhi_);
 	outputTree->Branch("GPhotE", &genPhoE_);
 	outputTree->Branch("GPhotSt", &genPhoSt_);
+	outputTree->Branch("GPhotPrompt", &genPhoPrompt_);
 	outputTree->Branch("GPhotMotherId", &genPhoMotherId_);
 	
 	outputTree->Branch("GJetAk04Pt", &genJetPt_ );
